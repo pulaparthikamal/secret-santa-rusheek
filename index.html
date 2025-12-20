@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secret Santa - Rusheek's Gift 🎅</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Icon components using lucide
+    const Gift = ({ className }) => {
+      useEffect(() => {
+        lucide.createIcons();
+      }, []);
+      return <i data-lucide="gift" className={className}></i>;
+    };
+
+    const Sparkles = ({ className }) => {
+      useEffect(() => {
+        lucide.createIcons();
+      }, []);
+      return <i data-lucide="sparkles" className={className}></i>;
+    };
+
+    const Trophy = ({ className }) => {
+      useEffect(() => {
+        lucide.createIcons();
+      }, []);
+      return <i data-lucide="trophy" className={className}></i>;
+    };
+
+    const Lightbulb = ({ className }) => {
+      useEffect(() => {
+        lucide.createIcons();
+      }, []);
+      return <i data-lucide="lightbulb" className={className}></i>;
+    };
+
+    const Grid3x3 = ({ className }) => {
+      useEffect(() => {
+        lucide.createIcons();
+      }, []);
+      return <i data-lucide="grid-3x3" className={className}></i>;
+    };
+
+    function SecretSantaSudoku() {
+      const [gameState, setGameState] = useState('intro');
+      const [showHint, setShowHint] = useState(false);
+      const [snowflakes, setSnowflakes] = useState([]);
+      const [selectedCell, setSelectedCell] = useState(null);
+      const [mistakes, setMistakes] = useState(0);
+      
+      const cupboardKey = "2025";
+      
+      const solution = [
+        [2, 4, 1, 3],
+        [1, 3, 4, 2],
+        [4, 2, 3, 1],
+        [3, 1, 2, 4]
+      ];
+      
+      const initialPuzzle = [
+        [2, 0, 0, 0],
+        [0, 3, 4, 0],
+        [4, 0, 0, 1],
+        [0, 0, 2, 4]
+      ];
+      
+      const [grid, setGrid] = useState(initialPuzzle.map(row => [...row]));
+      const [fixedCells] = useState(
+        initialPuzzle.map(row => row.map(cell => cell !== 0))
+      );
+
+      const questions = [
+        "Do you think any of upcoming questions are designed to trap you?",
+        "Who do you think are the top 10 smartest junior developers here?",
+        "Have you ever pretended to say fake reason just to take leave? What was the fake reason?",
+        "Would you trust anyone here with your phone unlocked? Who and why?",
+        "Have you started talking to your gym crush yet?",
+        "Who are the 5 people here with the best sense of humor?",
+        "Have you ever taken credit for someone else's work—or stayed silent when your manager praised you by mistake for others work?",
+        "Have you ever blamed frontend developers to cover up a backend issue?",
+        "Name up to 5 people here you trust, enjoy hanging out with, and consider real assets to the company.",
+        "Have you stopped stealing office stationery… or is it still happening? Only YES or NO"
+      ];
+
+      useEffect(() => {
+        const flakes = Array.from({ length: 30 }, (_, i) => ({
+          id: i,
+          left: Math.random() * 100,
+          delay: Math.random() * 5,
+          duration: 5 + Math.random() * 10
+        }));
+        setSnowflakes(flakes);
+      }, []);
+
+      useEffect(() => {
+        const handleKeyPress = (e) => {
+          if (gameState !== 'puzzle' || !selectedCell) return;
+          
+          const { row, col } = selectedCell;
+          if (fixedCells[row][col]) return;
+          
+          if (e.key >= '1' && e.key <= '4') {
+            handleNumberClick(parseInt(e.key));
+          }
+          else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+            handleNumberClick(0);
+          }
+          else if (e.key.startsWith('Arrow')) {
+            e.preventDefault();
+            let newRow = row;
+            let newCol = col;
+            
+            if (e.key === 'ArrowUp' && row > 0) newRow--;
+            if (e.key === 'ArrowDown' && row < 3) newRow++;
+            if (e.key === 'ArrowLeft' && col > 0) newCol--;
+            if (e.key === 'ArrowRight' && col < 3) newCol++;
+            
+            setSelectedCell({ row: newRow, col: newCol });
+          }
+        };
+        
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+      }, [gameState, selectedCell, fixedCells]);
+
+      const checkComplete = (currentGrid) => {
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            if (currentGrid[i][j] !== solution[i][j]) {
+              return false;
+            }
+          }
+        }
+        return true;
+      };
+
+      const handleCellClick = (row, col) => {
+        if (fixedCells[row][col]) return;
+        setSelectedCell({ row, col });
+      };
+
+      const handleNumberClick = (num) => {
+        if (!selectedCell) return;
+        
+        const { row, col } = selectedCell;
+        const newGrid = grid.map(r => [...r]);
+        newGrid[row][col] = num;
+        setGrid(newGrid);
+        
+        if (num !== 0 && num !== solution[row][col]) {
+          setMistakes(prev => prev + 1);
+        }
+        
+        if (checkComplete(newGrid)) {
+          setTimeout(() => {
+            setGameState('flipping');
+            setTimeout(() => {
+              setGameState('revealed');
+            }, 1000);
+          }, 500);
+        }
+      };
+
+      const startGame = () => {
+        setGameState('puzzle');
+      };
+
+      const getCellColor = (row, col, value) => {
+        if (fixedCells[row][col]) return 'bg-blue-900/50 text-white font-bold';
+        if (selectedCell?.row === row && selectedCell?.col === col) return 'bg-yellow-500/30 border-yellow-400';
+        if (value === 0) return 'bg-gray-800/50';
+        return 'bg-purple-900/30 text-green-400';
+      };
+
+      useEffect(() => {
+        lucide.createIcons();
+      });
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+          {snowflakes.map(flake => (
+            <div
+              key={flake.id}
+              className="absolute text-white opacity-70 pointer-events-none"
+              style={{
+                left: `${flake.left}%`,
+                animation: `fall ${flake.duration}s linear infinite`,
+                animationDelay: `${flake.delay}s`,
+                fontSize: '20px'
+              }}
+            >
+              ❄
+            </div>
+          ))}
+          
+          <style>{`
+            @keyframes fall {
+              0% { transform: translateY(-100px) rotate(0deg); }
+              100% { transform: translateY(100vh) rotate(360deg); }
+            }
+            @keyframes flip {
+              0% { transform: perspective(1000px) rotateY(0deg); }
+              100% { transform: perspective(1000px) rotateY(180deg); }
+            }
+            .flip-card {
+              animation: flip 1s ease-in-out;
+            }
+          `}</style>
+
+          <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+            {gameState === 'intro' && (
+              <div className="max-w-lg w-full">
+                <div className="bg-gradient-to-br from-red-600/20 to-green-600/20 backdrop-blur-xl rounded-3xl p-8 border-2 border-red-500/30 shadow-2xl">
+                  <div className="text-center space-y-6">
+                    <div className="flex justify-center">
+                      <div className="relative">
+                        <Gift className="w-24 h-24 text-red-500 animate-bounce" />
+                        <Sparkles className="w-8 h-8 text-yellow-400 absolute -top-2 -right-2 animate-pulse" />
+                      </div>
+                    </div>
+                    
+                    <h1 className="text-4xl font-bold text-white">
+                      🎅 Secret Santa 🎄
+                    </h1>
+                    
+                    <div className="bg-black/30 rounded-2xl p-6 space-y-3">
+                      <p className="text-2xl font-bold text-green-400">
+                        Hey Rusheek! 🧩
+                      </p>
+                      <p className="text-gray-300">
+                        Solve the puzzle to unlock your gift
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={startGame}
+                      className="w-full bg-gradient-to-r from-red-500 to-green-500 hover:from-red-600 hover:to-green-600 text-white font-bold py-4 px-8 rounded-xl transform transition hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
+                    >
+                      <Grid3x3 className="w-6 h-6" />
+                      Start Challenge
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {gameState === 'puzzle' && (
+              <div className="max-w-2xl w-full">
+                <div className="bg-gradient-to-br from-red-600/20 to-green-600/20 backdrop-blur-xl rounded-3xl p-6 md:p-8 border-2 border-green-500/30 shadow-2xl">
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <h2 className="text-3xl font-bold text-white mb-2">
+                        🎮 Sudoku Challenge
+                      </h2>
+                      <p className="text-gray-300 text-sm">
+                        Each row and column: 1, 2, 3, 4
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-black/40 rounded-xl p-3 border border-purple-500/30">
+                        <p className="text-xs text-gray-400">Mistakes</p>
+                        <p className="text-2xl font-bold text-red-400">{mistakes}</p>
+                      </div>
+                      <div className="bg-black/40 rounded-xl p-3 border border-blue-500/30">
+                        <p className="text-xs text-gray-400">Progress</p>
+                        <p className="text-2xl font-bold text-green-400">
+                          {grid.flat().filter(n => n !== 0).length}/16
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/40 rounded-2xl p-4 border-2 border-purple-500/30">
+                      <div className="grid grid-cols-4 gap-1 max-w-sm mx-auto">
+                        {grid.map((row, rowIdx) => (
+                          row.map((cell, colIdx) => (
+                            <button
+                              key={`${rowIdx}-${colIdx}`}
+                              onClick={() => handleCellClick(rowIdx, colIdx)}
+                              disabled={fixedCells[rowIdx][colIdx]}
+                              className={`
+                                aspect-square flex items-center justify-center
+                                text-2xl md:text-3xl font-bold rounded-lg
+                                border-2 transition-all
+                                ${getCellColor(rowIdx, colIdx, cell)}
+                                ${fixedCells[rowIdx][colIdx] ? 'cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
+                                ${(rowIdx + 1) % 2 === 0 && rowIdx !== 3 ? 'mb-2' : ''}
+                                ${(colIdx + 1) % 2 === 0 && colIdx !== 3 ? 'mr-2' : ''}
+                              `}
+                            >
+                              {cell !== 0 ? cell : ''}
+                            </button>
+                          ))
+                        ))}
+                      </div>
+
+                      <div className="mt-6 flex justify-center gap-2 flex-wrap">
+                        {[1, 2, 3, 4, 0].map(num => (
+                          <button
+                            key={num}
+                            onClick={() => handleNumberClick(num)}
+                            disabled={!selectedCell}
+                            className={`
+                              w-14 h-14 rounded-xl font-bold text-xl
+                              transition-all transform
+                              ${num === 0 
+                                ? 'bg-red-600/50 hover:bg-red-600/70 text-white' 
+                                : 'bg-gradient-to-br from-blue-600/50 to-purple-600/50 hover:from-blue-600/70 hover:to-purple-600/70 text-white'
+                              }
+                              ${selectedCell ? 'hover:scale-110 cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+                            `}
+                          >
+                            {num === 0 ? '✕' : num}
+                          </button>
+                        ))}
+                      </div>
+
+                      {selectedCell && (
+                        <p className="text-center text-xs text-gray-400 mt-3">
+                          Row {selectedCell.row + 1}, Col {selectedCell.col + 1}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="bg-black/40 rounded-xl p-4">
+                      <button
+                        onClick={() => setShowHint(!showHint)}
+                        className="w-full flex items-center justify-between text-yellow-400 hover:text-yellow-300 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Lightbulb className="w-5 h-5" />
+                          <span className="font-semibold">Hints</span>
+                        </div>
+                        <span>{showHint ? '▼' : '▶'}</span>
+                      </button>
+                      
+                      {showHint && (
+                        <div className="mt-4 p-4 bg-yellow-900/20 rounded-lg border border-yellow-600/30 space-y-2">
+                          <p className="text-sm text-gray-300">• Each row: 1, 2, 3, 4 (no repeats)</p>
+                          <p className="text-sm text-gray-300">• Each column: 1, 2, 3, 4 (no repeats)</p>
+                          <p className="text-sm text-gray-300">• Blue = fixed clues</p>
+                          <p className="text-xs text-purple-300 mt-2 pt-2 border-t border-gray-700">
+                            Keyboard: 1-4 to fill • Backspace to clear • Arrows to move
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {gameState === 'flipping' && (
+              <div className="max-w-md w-full">
+                <div className="flip-card bg-gradient-to-br from-red-600/20 to-green-600/20 backdrop-blur-xl rounded-3xl p-8 border-2 border-yellow-500/50 shadow-2xl">
+                  <div className="text-center space-y-6">
+                    <Trophy className="w-32 h-32 text-yellow-400 mx-auto animate-bounce" />
+                    <h2 className="text-4xl font-bold text-white">
+                      🧠 Puzzle Solved!
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {gameState === 'revealed' && (
+              <div className="max-w-3xl w-full max-h-screen overflow-y-auto py-4">
+                <div className="bg-gradient-to-br from-yellow-600/30 to-orange-600/30 backdrop-blur-xl rounded-3xl p-6 md:p-8 border-2 border-yellow-400 shadow-2xl">
+                  <div className="space-y-8">
+                    {/* Cupboard Key Section */}
+                    <div className="text-center space-y-6">
+                      <Trophy className="w-20 h-20 text-yellow-400 mx-auto" />
+                      
+                      <h2 className="text-4xl font-bold text-white">
+                        🎉 Congratulations! 🎉
+                      </h2>
+                      
+                      <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl p-8 transform rotate-2 shadow-xl">
+                        <p className="text-lg font-semibold text-white mb-3">
+                          🔑 Cupboard Key:
+                        </p>
+                        <p className="text-7xl font-bold text-white tracking-wider animate-pulse">
+                          {cupboardKey}
+                        </p>
+                      </div>
+
+                      <div className="bg-black/40 rounded-xl p-4">
+                        <p className="text-green-400 font-bold">
+                          Completed with {mistakes} mistake{mistakes !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Questions Section */}
+                    <div className="border-t-2 border-white/20 pt-6">
+                      <div className="bg-purple-900/30 rounded-2xl p-6 border-2 border-purple-400/30">
+                        <h3 className="text-2xl font-bold text-white text-center mb-6">
+                          📋 Before You Open Your Gift...
+                        </h3>
+                        
+                        <div className="space-y-4">
+                          {questions.map((question, index) => (
+                            <div key={index} className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
+                              <p className="text-gray-200">
+                                <span className="text-yellow-400 font-bold">{index + 1}.</span>
+                                <span className="ml-2">{question}</span>
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-6 text-center">
+                          <p className="text-sm text-gray-300 italic">
+                            Answer these honestly when opening your gift! 🎁
+                          </p>
+                          <p className="text-xs text-gray-400 mt-4">
+                            Merry Christmas, Rusheek! 🎄
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            - Your Secret Santa 🎅
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<SecretSantaSudoku />);
+  </script>
+</body>
+</html>
