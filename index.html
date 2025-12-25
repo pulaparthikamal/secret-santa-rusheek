@@ -80,18 +80,7 @@
         initialPuzzle.map(row => row.map(cell => cell !== 0))
       );
 
-      const questions = [
-        "Do you think any of upcoming questions are designed to trap you?",
-        "Who do you think are the top 10 smartest junior developers here?",
-        "Have you ever pretended to say fake reason just to take leave? What was the fake reason?",
-        "Would you trust anyone here with your phone unlocked? Who and why?",
-        "Have you started talking to your gym crush yet?",
-        "Who are the 5 people here with the best sense of humor?",
-        "Have you ever taken credit for someone else's work—or stayed silent when your manager praised you by mistake for others work?",
-        "Have you ever blamed frontend developers to cover up a backend issue?",
-        "Name up to 5 people here you trust, enjoy hanging out with, and consider real assets to the company.",
-        "Have you stopped stealing office stationery… or is it still happening? Only YES or NO"
-      ];
+      const giftGiverHint = "I am the only one who calls you (My Brother)";
 
       useEffect(() => {
         const flakes = Array.from({ length: 30 }, (_, i) => ({
@@ -402,30 +391,28 @@
                       </div>
                     </div>
 
-                    {/* Questions Section */}
+                    {/* Gift Giver Hint Section */}
                     <div className="border-t-2 border-white/20 pt-6">
                       <div className="bg-purple-900/30 rounded-2xl p-6 border-2 border-purple-400/30">
                         <h3 className="text-2xl font-bold text-white text-center mb-6">
-                          📋 Before You Open Your Gift...
+                          🎁 Who's Your Secret Santa?
                         </h3>
                         
-                        <div className="space-y-4">
-                          {questions.map((question, index) => (
-                            <div key={index} className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
-                              <p className="text-gray-200">
-                                <span className="text-yellow-400 font-bold">{index + 1}.</span>
-                                <span className="ml-2">{question}</span>
-                              </p>
-                            </div>
-                          ))}
+                        <div className="bg-gradient-to-br from-red-900/40 to-pink-900/40 rounded-xl p-8 border border-red-500/30">
+                          <p className="text-center text-gray-300 text-sm mb-4">
+                            💡 Here's your hint:
+                          </p>
+                          <p className="text-2xl font-bold text-white text-center italic">
+                            "{giftGiverHint}"
+                          </p>
                         </div>
 
                         <div className="mt-6 text-center">
                           <p className="text-sm text-gray-300 italic">
-                            Answer these honestly when opening your gift! 🎁
+                            Can you guess who it is? 🤔
                           </p>
                           <p className="text-xs text-gray-400 mt-4">
-                            Merry Christmas, Rusheek! 🎄
+                            Merry Christmas,& A Very Happy New-Year  Rusheek! 🎄
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             - Your Secret Santa 🎅
